@@ -1,0 +1,32 @@
+NavierStokes-V1.1
+8
+x_velocity
+y_velocity
+density
+tracer
+gradpx
+gradpy
+mag_vort
+avg_pressure
+2
+0
+1
+0 0 
+1 1 
+2 
+((0,0) (63,63) (0,0)) ((0,0) (127,127) (0,0)) 
+0 0 
+0.015625 0.015625 
+0.0078125 0.0078125 
+0
+0
+0 1 0
+0
+0 1
+0 1
+Level_0/Cell
+1 1 0
+0
+0 1
+0.9375 1
+Level_1/Cell
