@@ -1,7 +1,7 @@
 import getResult
 
 
-cases = ["Bubble", "DoubleShearLayer"] #  , "LidDrivenCavity", "FlowPastCylinder"，"Bubble", "ConvectedVortex"
+cases = [ "DoubleShearLayer", "LidDrivenCavity", "FlowPastCylinder"] #  "Bubble" , ，"Bubble", "ConvectedVortex"
 
 cases_res = {}
 
@@ -9,7 +9,7 @@ for case in cases:
     print("###################################################################################################################")
     print(f"-----------------------------------------    {case}     -------------------------------------------------")
 
-
+    # [Result, Result....., Result32]
     res = getResult.CollectData(case)
     
     # 原始数据
@@ -17,23 +17,28 @@ for case in cases:
     # getResult.Print(res)
 
     # 按 cpu_time 排序
-    getResult.AdjustResult(res, "cpu_time")
-    print("cpu_time 排序")
-    getResult.Print(res)
-    # gpu_time 排序
-    getResult.AdjustResult(res, "gpu_time")
-    print("gpu_time 排序")
-    getResult.Print(res)
-    # # max_grid_size 排序
+    # getResult.AdjustResult(res, "cpu_time")
+    # print("cpu_time 排序")
+    # getResult.Print(res)
+    # # gpu_time 排序
+    # getResult.AdjustResult(res, "gpu_time")
+    # print("gpu_time 排序")
+    # getResult.Print(res)
+    # # # max_grid_size 排序
     # getResult.AdjustResult(res, "max_grid_size")
     # print("max_grid_size 排序")
     # getResult.Print(res)
-
-    # getResult.CompareAndShow(res, "max_grid_size")
-    # getResult.CompareAndShow(res, "cycling")
-    # getResult.CompareAndShow(res, "max_level")
-    # getResult.CompareAndShow(res, "regrid_int")
-    # getResult.CompareAndShow(res, "skip")
+    
+    getResult.CompareAndShow(res, "max_grid_size")
+    getResult.CompareAndShow(res, "max_grid_size", "gpu")
+    getResult.CompareAndShow(res, "cycling")
+    getResult.CompareAndShow(res, "cycling", "gpu")
+    getResult.CompareAndShow(res, "max_level")
+    getResult.CompareAndShow(res, "max_level", "gpu")
+    getResult.CompareAndShow(res, "regrid_int")
+    getResult.CompareAndShow(res, "regrid_int", "gpu")
+    getResult.CompareAndShow(res, "skip")
+    getResult.CompareAndShow(res, "skip", "gpu")
     
     
     # getResult.TopFunc(res)

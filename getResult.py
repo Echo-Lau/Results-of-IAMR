@@ -29,7 +29,6 @@ class Result:
         self.gpu_function_name = []
         self.gpu_function_percent = []
 
-
     def __str__(self):
         return f"{self.skip} {self.cycling} {self.max_level} {self.max_grid_size} {self.regrid_int} {self.cpu_time} {self.gpu_step} {self.gpu_time} {self.cpu_step}"
 
@@ -82,7 +81,7 @@ def Print(list_result):
     # df.to_csv(f'table_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.csv', index=False)
 
 def PrintFunc(list_result):
-    return 
+    return
 
 def CollectData(case):
         res = []
@@ -243,7 +242,7 @@ def Get(vec_res, factors = {}):
                                 ans.append(item)
     return ans
   
-def CompareAndShow(vec_res, factor):
+def CompareAndShow(vec_res, factor, processor = "cpu"):
     
     vec = {
         "skip" : [0, 1],
@@ -257,45 +256,58 @@ def CompareAndShow(vec_res, factor):
     for x in vec[factor]:
         temp = Get(vec_res, {factor : [x]})
         vec_compare.append(temp)
-        
+    
     ans = 0
     error = 0
-    # for i in vec_compare:
-    #     Print(i)
     items_true = []
     items_false = []
     for i in range(len(vec_compare[0])):
         v0 = vec_compare[0]
         v1 = vec_compare[1]
-        if (v0[i].cpu_time == -1 or v1[i].cpu_time == -1):
-            discard += 1
-        if (v0[i].cpu_time >  v1[i].cpu_time):
-            ans+=1
-            temp = []
-            temp.append(v0[i])
-            temp.append(v1[i])
-            items_true.append(temp)
-        # items_false.append([[v0[i]], v1[i]])
-        else:
-            temp = []
-            temp.append(v0[i])
-            temp.append(v1[i])
-            items_false.append(temp)
+        if processor == "cpu":
+            if (v0[i].cpu_time == -1 or v1[i].cpu_time == -1):
+                discard += 1
+            if (v0[i].cpu_time >  v1[i].cpu_time):
+                ans+=1
+                temp = []
+                temp.append(v0[i])
+                temp.append(v1[i])
+                items_true.append(temp)
+            else:
+                temp = []
+                temp.append(v0[i])
+                temp.append(v1[i])
+                items_false.append(temp)
+        elif processor == "gpu":
+            if (v0[i].gpu_time == -1 or v1[i].gpu_time == -1):
+                discard += 1
+            if (v0[i].gpu_time >  v1[i].gpu_time):
+                ans+=1
+                temp = []
+                temp.append(v0[i])
+                temp.append(v1[i])
+                items_true.append(temp)
+            else:
+                temp = []
+                temp.append(v0[i])
+                temp.append(v1[i])
+                items_false.append(temp)
 
-    print(f"total : 16")
+    
     # 其他参数相同，比较 {factor}, 共有 {total} 种情况，其中 {factor} : {vec[factor][0]} slower than  {vec[factor][1]}  = 共有 {ans} 种
-    print(f"{factor} : {vec[factor][0]} slower than  {vec[factor][1]}  = {ans }")
-    # error表示该例子没有得到time， time == 1 
-    print(f"error : {error}")
+    # error表示该例子没有得到time， time == -1 
+    print(f"{factor:<{15}} : {vec[factor][0]:>{8}} slower than {vec[factor][1]:<{8}} : {ans:>{8}} || {processor} || total : 16, error : {error} || ")
+
+    # 打印详细信息
+    # print(f"The following are all examples for {factor} : {vec[factor][0]} slower than {vec[factor][1]}")
+    # for items in items_true:
+    #     Print(items)
+
+    # print(f"The following are all examples for {factor} : {vec[factor][0]} faster than {vec[factor][1]}")
+    # for items in items_false:
+    #     Print(items)
 
 
-    print(f"The following are all examples for {factor} : {vec[factor][0]} slower than {vec[factor][1]}")
-    for items in items_true:
-        Print(items)
-
-    print(f"The following are all examples for {factor} : {vec[factor][0]} faster than {vec[factor][1]}")
-    for items in items_false:
-        Print(items)
 
 def AdjustResult(list_result, para):
     # 按参数调整, 
