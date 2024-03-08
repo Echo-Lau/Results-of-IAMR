@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import re
 from datetime import datetime
+import glob
 
 # vec_proc = ["cpu", "gpu"]
 # vec_dim = ["2d", "3d"]
@@ -40,6 +41,7 @@ class Result:
             # return self.name == other.name
             return self.skip == other.skip and self.cycling == other.cycling and self.max_grid_size == other.max_grid_size and self.max_level == other.max_level and self.regrid_int == other.regrid_int
         return False
+    
     def Update(self, other):
         if self.cpu_time <= 0 or self.cpu_step <= 0:
             self.cpu_time = other.cpu_time
@@ -54,6 +56,37 @@ class Result:
 
 
         # str = cpu2d_skip0_Auto_mgs16_1_regrid8 or gpu2d_skip0_Auto_mgs16_1_regrid8
+
+
+        
+def CheckInput(path_input, case_res):
+    with open(path_input, 'r') as file:
+        while(True):
+            line = file.readline()
+            list_para = ["skip", "max_grid_size", "max_level", "cycling", "regrid_int"]
+            for para in list_para: 
+                if para in line and "=" in line :
+                    line.strip()
+                    if not line.startswith("#"):
+                        pattern = re.compile(r'=(.*?)#')
+                        match = pattern.search(line)
+                        if match:
+                            value = match.group(1).strip()
+                        if not value == str(getattr(case_res,para)):
+                            # print(case_res)
+                            print(f"ERROR: 参数和文件名不同")
+                            print(f"path : {path_input}")  
+                            print(f"{line}")
+                    else:
+                        print(f"ERROR: 注释，未生效")
+                        print(f"path : {path_input}")
+                        print(f"{line}")
+
+                        
+
+            if line == '':
+                case_res.gpu_time = -1 
+                break            
 
 # 打印列表 [Result1, Result2, ... ]
 def Print(list_result):
@@ -123,6 +156,11 @@ def CollectData(case):
                         regrid = match.group(1)
                         case_res.regrid_int = int(regrid)             
                     
+                    pattern = f"{file_path}/input*"
+                    input_files = glob.glob(pattern)
+                    
+                    # CheckInput(input_files[0],case_res)
+
                     if "cpu" in type:
                         for file in files:
                             step = 0
@@ -130,6 +168,7 @@ def CollectData(case):
                             if match:
                                 case_res.cpu_step = max(int(match.group(1)), step)
                         
+
                         with open(f"{file_path}/log.txt", 'r') as file:
                             line = file.readline()
                             while(True):
@@ -261,9 +300,18 @@ def CompareAndShow(vec_res, factor, processor = "cpu"):
     error = 0
     items_true = []
     items_false = []
+    min_delta_cpu_time = float('inf'); max_delta_cpu_time = 0
+    min_delta_gpu_time = float('inf'); max_delta_gpu_time = 0
     for i in range(len(vec_compare[0])):
         v0 = vec_compare[0]
         v1 = vec_compare[1]
+        
+        min_delta_cpu_time = min(min_delta_cpu_time, abs(v0[i].cpu_time - v1[i].cpu_time))
+        max_delta_cpu_time = max(max_delta_cpu_time, abs(v0[i].cpu_time - v1[i].cpu_time))
+        
+        min_delta_gpu_time = min(min_delta_gpu_time, abs(v0[i].gpu_time - v1[i].gpu_time))
+        max_delta_gpu_time = max(max_delta_gpu_time, abs(v0[i].gpu_time - v1[i].gpu_time))
+
         if processor == "cpu":
             if (v0[i].cpu_time == -1 or v1[i].cpu_time == -1):
                 discard += 1
@@ -296,7 +344,13 @@ def CompareAndShow(vec_res, factor, processor = "cpu"):
     
     # 其他参数相同，比较 {factor}, 共有 {total} 种情况，其中 {factor} : {vec[factor][0]} slower than  {vec[factor][1]}  = 共有 {ans} 种
     # error表示该例子没有得到time， time == -1 
-    print(f"{factor:<{15}} : {vec[factor][0]:>{8}} slower than {vec[factor][1]:<{8}} : {ans:>{8}} || {processor} || total : 16, error : {error} || ")
+    print("####################################################################################################################")
+    print(f"{processor} || total : 16, error : {error} || {factor:<{15}} : {vec[factor][0]:>{8}} slower than {vec[factor][1]:<{8}} : {ans:>{8}}  ")
+    print(f"min_delta_cpu_time: {min_delta_cpu_time}")
+    print(f"max_delta_cpu_time: {max_delta_cpu_time}")
+    print(f"min_delta_gpu_time: {min_delta_gpu_time}")
+    print(f"max_delta_gpu_time: {max_delta_gpu_time}")
+
 
     # 打印详细信息
     # print(f"The following are all examples for {factor} : {vec[factor][0]} slower than {vec[factor][1]}")
@@ -308,7 +362,6 @@ def CompareAndShow(vec_res, factor, processor = "cpu"):
     #     Print(items)
 
 
-
 def AdjustResult(list_result, para):
     # 按参数调整, 
     if para == 'cpu_time':
@@ -318,6 +371,9 @@ def AdjustResult(list_result, para):
     elif para == 'max_grid_size':
         # import pdb ; pdb.set_trace()  # 在这里设置一个断点
         list_result.sort(key=lambda x: (x.max_grid_size, x.cpu_time, x.gpu_time))  
+    elif para == "cycling":
+        list_result.sort(key=lambda x: (x.cycling, x.cpu_time, x.gpu_time))  
+
 
 def TopFunc(list_result):
     for res in list_result:
